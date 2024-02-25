@@ -10,10 +10,27 @@ export function getPostSlugs() {
 }
 
 export function getPostBySlug(slug: string) {
-  const realSlug = slug.replace(/\.md$/, "");
+  let realSlug = slug.replace(/\.md$/, "");
   const fullPath = join(postsDirectory, `${realSlug}.md`);
   const fileContents = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(fileContents);
+  let { data, content } = matter(fileContents);
+  
+  let basePathReplacement = '';
+  if (process.env.NODE_ENV === "production") {
+    basePathReplacement = '/reimagined-octo-waddle';
+  }
+  
+  // Convert data and realSlug to strings
+  let dataStr = JSON.stringify(data);
+  let realSlugStr = JSON.stringify(realSlug);
+  
+  // Replace ${basePath} with the appropriate value
+  dataStr = dataStr.replaceAll(/\$\{basePath\}/g, basePathReplacement);
+  realSlugStr = realSlugStr.replaceAll(/\$\{basePath\}/g, basePathReplacement);
+  
+  // Parse the modified strings back to JSON
+  data = JSON.parse(dataStr);
+  realSlug = JSON.parse(realSlugStr);
 
   return { ...data, slug: realSlug, content } as Post;
 }
